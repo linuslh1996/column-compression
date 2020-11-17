@@ -18,9 +18,6 @@ OPERATOR_HASH = "OPERATOR_HASH"
 
 BENCHMARKS: List[str] = ["CH-benCHmark", "Join Order Benchmark", "TPC-C", "TPC-DS", "TPC-H"]
 
-def read_csv(benchmark_folder: Path, workload: Operator) -> DataFrame:
-    return pd.read_csv(benchmark_folder / f"{workload}.csv", delimiter="|")
-
 def get_runtime_ns_per_column_type(table: DataFrame) -> List[Tuple[str, int]]:
     grouped_by_column_type: DataFrame = table.groupby(COLUMN_TYPE, as_index=False)[RUNTIME_NS].mean()
     runtime_ns_per_column_type: List[Tuple[str, int]] = []
@@ -46,7 +43,7 @@ for benchmark in BENCHMARKS:
 
         # Get Dataframe
         benchmark_folder: Path = workloads_folder / benchmark
-        table: DataFrame = read_csv(benchmark_folder, operator)
+        table: DataFrame = pd.read_csv(benchmark_folder / f"{operator}.csv", delimiter="|")
         if operator is not Operator.SCAN:
             table = get_grouped_by_operator_hash(table)
 
@@ -58,7 +55,5 @@ for benchmark in BENCHMARKS:
 
         print("")
     print("")
-
-
 
 
