@@ -32,28 +32,31 @@ def get_grouped_by_operator_hash(table: DataFrame) -> DataFrame:
     grouped_by_operator_hash = grouped_by_operator_hash.reset_index()
     return grouped_by_operator_hash
 
-# Initialize
-data_path: str = sys.argv[1]
-workloads_folder: Path = Path(data_path)
+def run():
+    # Initialize
+    data_path: str = sys.argv[1] if len(sys.argv) > 1 else "workloads"
+    workloads_folder: Path = Path(data_path)
 
-for benchmark in BENCHMARKS:
-    print(f"Processing {benchmark}")
-    for operator in list(Operator):
-        print(f"Processing {operator}")
+    for benchmark in BENCHMARKS:
+        print(f"Processing {benchmark}")
+        for operator in list(Operator):
+            print(f"Processing {operator}")
 
-        # Get Dataframe
-        benchmark_folder: Path = workloads_folder / benchmark
-        table: DataFrame = pd.read_csv(benchmark_folder / f"{operator}.csv", delimiter="|")
-        if operator is not Operator.SCAN:
-            table = get_grouped_by_operator_hash(table)
+            # Get Dataframe
+            benchmark_folder: Path = workloads_folder / benchmark
+            table: DataFrame = pd.read_csv(benchmark_folder / f"{operator}.csv", delimiter="|")
+            if operator is not Operator.SCAN:
+                table = get_grouped_by_operator_hash(table)
 
-        # Calculate Information
-        runtime_per_column_type: List[Tuple[str, int]] = get_runtime_ns_per_column_type(table)
-        for type, runtime in runtime_per_column_type:
-            in_milliseconds: float = runtime / 1_000_000
-            print(f"column type {type} takes {round(in_milliseconds, 2)} milliseconds on average")
+            # Calculate Information
+            runtime_per_column_type: List[Tuple[str, int]] = get_runtime_ns_per_column_type(table)
+            for type, runtime in runtime_per_column_type:
+                in_milliseconds: float = runtime / 1_000_000
+                print(f"column type {type} takes {round(in_milliseconds, 2)} milliseconds on average")
 
+            print("")
         print("")
-    print("")
 
 
+if __name__ == "__main__":
+    run()
