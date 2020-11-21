@@ -15,22 +15,34 @@ RUNTIME_NS = "RUNTIME_NS"
 COLUMN_TYPE = "COLUMN_TYPE"
 QUERY_HASH = "QUERY_HASH"
 OPERATOR_HASH = "OPERATOR_HASH"
+DATA_TYPE = "DATA_TYPE"
+TABLE_NAME = "TABLE_NAME"
+COLUMN_NAME = "COLUMN_NAME"
 
 BENCHMARKS: List[str] = ["CH-benCHmark", "Join Order Benchmark", "TPC-C", "TPC-DS", "TPC-H"]
 
-def get_runtime_ns_per_column_type(table: DataFrame) -> List[Tuple[str, int]]:
-    grouped_by_column_type: DataFrame = table.groupby(COLUMN_TYPE, as_index=False)[RUNTIME_NS].mean()
+def get_runtime_ns_per_column_type(table: DataFrame, group_attribute = COLUMN_TYPE) -> List[Tuple[str, int]]:
+    grouped_by_column_type: DataFrame = table.groupby(group_attribute, as_index=False)[RUNTIME_NS].mean()
     runtime_ns_per_column_type: List[Tuple[str, int]] = []
-    for index, row in grouped_by_column_type.iterrows():
-        runtime_ns_per_column_type.append((row[COLUMN_TYPE], row[RUNTIME_NS]))
+    for _, row in grouped_by_column_type.iterrows():
+        runtime_ns_per_column_type.append((row[group_attribute], row[RUNTIME_NS]))
     return runtime_ns_per_column_type
 
+def get_runtime_ns_per_column_data_type(table: DataFrame, metadata: DataFrame) -> List[Tuple[str, int]]:
+    table[TABLE_NAME] = table[TABLE_NAME].astype(object)
+    table[COLUMN_NAME] = table[COLUMN_NAME].astype(object)
+    table_with_data_types = table.merge(metadata, how="left", on=[TABLE_NAME, COLUMN_NAME])
+    return get_runtime_ns_per_column_type(table_with_data_types, DATA_TYPE)
+
 def get_grouped_by_operator_hash(table: DataFrame) -> DataFrame:
-    grouped_by_operator_hash: DataFrame = table.groupby([QUERY_HASH, OPERATOR_HASH, COLUMN_TYPE], as_index=False)[RUNTIME_NS] \
+    grouped_by_operator_hash: DataFrame = table.groupby([QUERY_HASH, OPERATOR_HASH], as_index=False)[RUNTIME_NS] \
         .agg(["count", "mean"])
     grouped_by_operator_hash[RUNTIME_NS] = [mean / count for mean, count in zip(grouped_by_operator_hash["mean"], grouped_by_operator_hash["count"])]
     grouped_by_operator_hash = grouped_by_operator_hash.reset_index()
-    return grouped_by_operator_hash
+
+    table = table.drop(RUNTIME_NS, axis=1)
+    table = table.merge(grouped_by_operator_hash, on=[QUERY_HASH, OPERATOR_HASH])
+    return table
 
 def run():
     # Initialize
@@ -39,22 +51,27 @@ def run():
 
     for benchmark in BENCHMARKS:
         print(f"Processing {benchmark}")
+        benchmark_folder: Path = workloads_folder / benchmark
+        metadata = pd.read_csv(benchmark_folder / "column_meta_data.csv", delimiter="|")
         for operator in list(Operator):
             print(f"Processing {operator}")
 
             # Get Dataframe
-            benchmark_folder: Path = workloads_folder / benchmark
             table: DataFrame = pd.read_csv(benchmark_folder / f"{operator}.csv", delimiter="|")
             if operator is not Operator.SCAN:
                 table = get_grouped_by_operator_hash(table)
 
             # Calculate Information
             runtime_per_column_type: List[Tuple[str, int]] = get_runtime_ns_per_column_type(table)
-            for type, runtime in runtime_per_column_type:
-                in_milliseconds: float = runtime / 1_000_000
-                print(f"column type {type} takes {round(in_milliseconds, 2)} milliseconds on average")
 
-            print("")
+            runtime_per_data_type: List[Tuple[str, int]] = get_runtime_ns_per_column_data_type(table, metadata)
+
+            for runtimes, name in zip([runtime_per_column_type, runtime_per_data_type], ["column_type", "data_type"]):
+                for type, runtime in runtimes:
+                    in_milliseconds: float = runtime / 1_000_000
+                    print(f"{name} {type} takes {round(in_milliseconds, 2)} milliseconds on average")
+
+                print("")
         print("")
 
 
