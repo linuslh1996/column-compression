@@ -51,7 +51,7 @@ def run():
     workloads_folder: Path = Path(data_path)
 
     runtimes_per_data_type = []
-    runtimes_per_column_type = []
+    runtimes_per_data_type_mix = []
 
     for benchmark in BENCHMARKS:
         print(f"Processing {benchmark}")
@@ -76,9 +76,10 @@ def run():
             #table = table.groupby([TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, DATA_TYPE], as_index=False)[RUNTIME_NS].mean()
 
             # Calculate Information
-            runtime_per_data_type: List[Tuple[str, int]] = get_runtime_ns_per_grouped_attributes(table, [COLUMN_TYPE, DATA_TYPE])
+            runtime_per_data_type_mix = get_runtime_ns_per_grouped_attributes(table, [COLUMN_TYPE, DATA_TYPE])
+            runtime_per_data_type = get_runtime_ns_per_grouped_attributes(table, [DATA_TYPE])
 
-            for runtimes, name in zip([runtime_per_data_type], ["data_type"]):
+            for runtimes, name in zip([runtime_per_data_type, runtime_per_data_type_mix], ["type", "data_type_mix"]):
                 for type, runtime in runtimes:
                     in_milliseconds: float = runtime / 1_000_000
                     print(f"{name} {type} takes {round(in_milliseconds, 2)} milliseconds on average")
@@ -86,9 +87,12 @@ def run():
                 
                 print("")
             
+            runtimes_per_data_type_mix += [[t[0], t[1], operator, benchmark] for t in runtime_per_data_type_mix]
             runtimes_per_data_type += [[t[0], t[1], operator, benchmark] for t in runtime_per_data_type]
+
         print("")
-        pd.DataFrame(runtimes_per_data_type, columns=["type", "runtime", "operator", "benchmark"]).to_csv("runtimes_per_data_type.csv", index=False)
+    pd.DataFrame(runtimes_per_data_type_mix, columns=["type", "runtime", "operator", "benchmark"]).to_csv("data/runtimes_per_data_type_mix.csv", index=False)
+    pd.DataFrame(runtimes_per_data_type, columns=["type", "runtime", "operator", "benchmark"]).to_csv("data/runtimes_per_data_type.csv", index=False)
 
 if __name__ == "__main__":
     run()
