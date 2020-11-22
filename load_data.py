@@ -10,6 +10,7 @@ class Operator(str, Enum):
     SCAN = "table_scans",
     PROJECTION = "projections",
     AGGREGATE = "aggregates",
+    JOIN = "joins"
 
 RUNTIME_NS = "RUNTIME_NS"
 COLUMN_TYPE = "COLUMN_TYPE"
@@ -21,18 +22,18 @@ COLUMN_NAME = "COLUMN_NAME"
 
 BENCHMARKS: List[str] = ["CH-benCHmark", "Join Order Benchmark", "TPC-C", "TPC-DS", "TPC-H"]
 
-def get_runtime_ns_per_column_type(table: DataFrame, group_attribute = COLUMN_TYPE) -> List[Tuple[str, int]]:
-    grouped_by_column_type: DataFrame = table.groupby(group_attribute, as_index=False)[RUNTIME_NS].mean()
+def get_runtime_ns_per_grouped_attributes(table: DataFrame, grouped_attributes: List[str]) -> List[Tuple[str, int]]:
+    grouped_by_column_type: DataFrame = table.groupby(grouped_attributes, as_index=False)[RUNTIME_NS].mean()
     runtime_ns_per_column_type: List[Tuple[str, int]] = []
     for _, row in grouped_by_column_type.iterrows():
-        runtime_ns_per_column_type.append((row[group_attribute], row[RUNTIME_NS]))
+        runtime_ns_per_column_type.append((f"{','.join([row[attr] for attr in grouped_attributes])}", row[RUNTIME_NS]))
     return runtime_ns_per_column_type
 
-def get_runtime_ns_per_column_data_type(table: DataFrame, metadata: DataFrame) -> List[Tuple[str, int]]:
+def get_with_column_data_type(table: DataFrame, metadata: DataFrame) -> DataFrame:
     table[TABLE_NAME] = table[TABLE_NAME].astype(object)
     table[COLUMN_NAME] = table[COLUMN_NAME].astype(object)
     table_with_data_types = table.merge(metadata, how="left", on=[TABLE_NAME, COLUMN_NAME])
-    return get_runtime_ns_per_column_type(table_with_data_types, DATA_TYPE)
+    return table_with_data_types
 
 def get_grouped_by_operator_hash(table: DataFrame) -> DataFrame:
     grouped_by_operator_hash: DataFrame = table.groupby([QUERY_HASH, OPERATOR_HASH], as_index=False)[RUNTIME_NS] \
@@ -61,15 +62,23 @@ def run():
 
             # Get Dataframe
             table: DataFrame = pd.read_csv(benchmark_folder / f"{operator}.csv", delimiter="|")
+
+            # Preprocess in case that we have a join (since both columns that we join on have the same type, we
+            # select the left column as the "true" column)
+            if operator is Operator.JOIN:
+                table = table.rename({f"LEFT_{COLUMN_NAME}": COLUMN_NAME, f"LEFT_{COLUMN_TYPE}":COLUMN_TYPE,
+                                     f"LEFT_{TABLE_NAME}":TABLE_NAME}, axis="columns")
+
+            # Groupby to avoid having missleading results
             if operator is not Operator.SCAN:
                 table = get_grouped_by_operator_hash(table)
+            table = get_with_column_data_type(table, metadata)
+            #table = table.groupby([TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, DATA_TYPE], as_index=False)[RUNTIME_NS].mean()
 
             # Calculate Information
-            runtime_per_column_type: List[Tuple[str, int]] = get_runtime_ns_per_column_type(table)
+            runtime_per_data_type: List[Tuple[str, int]] = get_runtime_ns_per_grouped_attributes(table, [COLUMN_TYPE, DATA_TYPE])
 
-            runtime_per_data_type: List[Tuple[str, int]] = get_runtime_ns_per_column_data_type(table, metadata)
-
-            for runtimes, name in zip([runtime_per_column_type, runtime_per_data_type], ["column_type", "data_type"]):
+            for runtimes, name in zip([runtime_per_data_type], ["data_type"]):
                 for type, runtime in runtimes:
                     in_milliseconds: float = runtime / 1_000_000
                     print(f"{name} {type} takes {round(in_milliseconds, 2)} milliseconds on average")
@@ -77,12 +86,9 @@ def run():
                 
                 print("")
             
-            runtimes_per_column_type += [[t[0], t[1], operator, benchmark] for t in runtime_per_column_type]
-            runtimes_per_data_type += [[t[0], t[1], operator, benchmark] for t in runtime_per_data_type] 
-            
+            runtimes_per_data_type += [[t[0], t[1], operator, benchmark] for t in runtime_per_data_type]
         print("")
-    pd.DataFrame(runtimes_per_column_type, columns=["type", "runtime", "operator", "benchmark"]).to_csv("runtimes_per_column_type.csv", index=False)
-    pd.DataFrame(runtimes_per_data_type, columns=["type", "runtime", "operator", "benchmark"]).to_csv("runtimes_per_data_type.csv", index=False)
+        pd.DataFrame(runtimes_per_data_type, columns=["type", "runtime", "operator", "benchmark"]).to_csv("runtimes_per_data_type.csv", index=False)
 
 if __name__ == "__main__":
     run()
