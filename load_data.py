@@ -49,6 +49,9 @@ def run():
     data_path: str = sys.argv[1] if len(sys.argv) > 1 else "workloads"
     workloads_folder: Path = Path(data_path)
 
+    runtimes_per_data_type = []
+    runtimes_per_column_type = []
+
     for benchmark in BENCHMARKS:
         print(f"Processing {benchmark}")
         benchmark_folder: Path = workloads_folder / benchmark
@@ -71,9 +74,15 @@ def run():
                     in_milliseconds: float = runtime / 1_000_000
                     print(f"{name} {type} takes {round(in_milliseconds, 2)} milliseconds on average")
 
+                
                 print("")
+            
+            runtimes_per_column_type += [[t[0], t[1], operator, benchmark] for t in runtime_per_column_type]
+            runtimes_per_data_type += [[t[0], t[1], operator, benchmark] for t in runtime_per_data_type] 
+            
         print("")
-
+    pd.DataFrame(runtimes_per_column_type, columns=["type", "runtime", "operator", "benchmark"]).to_csv("runtimes_per_column_type.csv", index=False)
+    pd.DataFrame(runtimes_per_data_type, columns=["type", "runtime", "operator", "benchmark"]).to_csv("runtimes_per_data_type.csv", index=False)
 
 if __name__ == "__main__":
     run()
