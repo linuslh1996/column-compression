@@ -4,12 +4,11 @@ run_benchmark() {
     # Run Benchmark without LTO
     mkdir -p cmake-build-release && cd cmake-build-release
     rm -rf *
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On
-    make hyriseBenchmarkTPCH -j 16 && ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_1.json -r 100  >> ../sizes_$2.txt
-    # Run Benchmark with LTO
-    rm -rf *
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -DENABLE_LTO=On
-    make hyriseBenchmarkTPCH -j 16 && ./hyriseBenchmarkTPCH -e ../encoding_$2.json -q 1--dont_cache_binary_tables -o ../tpch_$2_LTO_1.json -r 100
+    cmake .. -DCMAKE_C_COMPILER=clang-10 -DCMAKE_CXX_COMPILER=clang++-10 -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja hyriseBenchmarkTPCH &&
+    ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_1.json -r 100  >> ../sizes_$2.txt
+    # Run Benchmark with LTO 
+    cmake ..  -DCMAKE_C_COMPILER=clang-10 -DCMAKE_CXX_COMPILER=clang++-10 -DENABLE_LTO=On -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja hyriseBenchmarkTPCH &&
+    ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_LTO_1.json -r 100
     cd ..
 }
 
