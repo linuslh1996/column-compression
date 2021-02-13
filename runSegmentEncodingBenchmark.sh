@@ -16,6 +16,8 @@ rm -rf hyriseColumnCompressionBenchmark
 git clone git@github.com:benrobby/hyrise.git hyriseColumnCompressionBenchmark
 cd hyriseColumnCompressionBenchmark
 
+git checkout benchmark/compareColumnEncodings && cp FastPFOR_CMakeLists.txt third_party/FastPFor/CMakeLists.txt
+run_benchmark benchmark/compareColumnEncodings fastpfor
 run_benchmark benchmark/implementSIMDCAI SIMDCAI
 
 git checkout benchmark/turboPFOR && git pull &&
