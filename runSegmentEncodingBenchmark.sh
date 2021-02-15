@@ -27,3 +27,5 @@ run_benchmark benchmark/turboPFOR TurboPFOR
 run_benchmark benchmark/turboPFOR Dictionary
 run_benchmark benchmark/turboPFOR FrameOfReference
 run_benchmark benchmark/turboPFOR Unencoded
+run_benchmark benchmark/turboPFOR LZ4
+run_benchmark benchmark/turboPFOR RunLength
