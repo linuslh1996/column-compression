@@ -25,6 +25,7 @@ git submodule init && git submodule update &&
 cd third_party/TurboPFor-Integer-Compression && make all -j 8 && cd - &&
 
 run_benchmark benchmark/turboPFOR TurboPFOR
+run_benchmark benchmark/turboPFOR_bitpacking TurboPFOR_bitpacking
 
 run_benchmark benchmark/turboPFOR Dictionary
 run_benchmark benchmark/turboPFOR FrameOfReference
