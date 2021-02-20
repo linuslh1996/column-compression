@@ -26,8 +26,6 @@ cd third_party/TurboPFor-Integer-Compression && make all -j 8 && cd - &&
 
 run_benchmark benchmark/turboPFOR TurboPFOR
 run_benchmark benchmark/turboPFOR_bitpacking TurboPFOR_bitpacking
-exit 0
-
 
 run_benchmark benchmark/implementSIMDCAI SIMDCAI "cd third_party/SIMDCompressionAndIntersection && make all -j 16 && cd -"
 run_benchmark benchmark/turboPFOR Dictionary
