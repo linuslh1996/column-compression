@@ -19,14 +19,15 @@ rm -rf hyriseColumnCompressionBenchmark
 git clone git@github.com:benrobby/hyrise.git hyriseColumnCompressionBenchmark
 cd hyriseColumnCompressionBenchmark
 
-run_benchmark benchmark/implementSIMDCAI SIMDCAI "cd third_party/SIMDCompressionAndIntersection && make all -j 16 && cd -"
 
 git checkout benchmark/turboPFOR && git pull &&
 git submodule init && git submodule update &&
 cd third_party/TurboPFor-Integer-Compression && make all -j 8 && cd - &&
 
 run_benchmark benchmark/turboPFOR TurboPFOR
+run_benchmark benchmark/turboPFOR_bitpacking TurboPFOR_bitpacking
 
+run_benchmark benchmark/implementSIMDCAI SIMDCAI "cd third_party/SIMDCompressionAndIntersection && make all -j 16 && cd -"
 run_benchmark benchmark/turboPFOR Dictionary
 run_benchmark benchmark/turboPFOR FrameOfReference
 run_benchmark benchmark/turboPFOR Unencoded

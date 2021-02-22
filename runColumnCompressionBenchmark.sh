@@ -18,6 +18,9 @@ cd hyriseColumnCompressionBenchmark
 
 run_benchmark benchmarking/bitCompression dictionary
 run_benchmark benchmarking/bitCompression bitpacking_turbopfor
+run_benchmark benchmarking/bitCompressionSequential bitpacking_turbopfor_seq
 run_benchmark benchmark/compactVetor bitpacking_compactvector
 run_benchmark benchmark/compactVetor fsba
 run_benchmark benchmark/compactVetor simdbp
+run_benchmark benchmarking/bitCompressionSIMDCAISeq bitpacking_simdcai_seq
+run_benchmark benchmarking/bitCompressionSIMDCAI bitpacking_simdcai
