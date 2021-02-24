@@ -25,6 +25,8 @@ class BenchmarkResults:
 
 
 def parse_benchmark(filename):
+    print(filename)
+
     with open(filename) as f:
         data = json.load(f)
         f.close()
@@ -61,7 +63,7 @@ def benchmarks_to_low_level_csv(folder_name):
         for file in os.listdir(directory):
             filename = os.fsdecode(file)
             if filename.endswith(".json"): 
-                benchmark = parse_benchmark(filename)
+                benchmark = parse_benchmark(folder_name + "/" + filename)
                 f.write(f"{benchmark.name},{benchmark.total_duration},{benchmark.avg_throughput}\n")
         f.close()
 
@@ -73,12 +75,15 @@ def benchmarks_to_high_level_csv(folder_name):
         for file in os.listdir(directory):
             filename = os.fsdecode(file)
             if filename.endswith(".json"): 
-                benchmark = parse_benchmark(filename)
+                benchmark = parse_benchmark(folder_name + "/" + filename)
                 for query, duration, throughput in zip(benchmark.queries, benchmark.avg_durations, benchmark.throughputs):
                     f.write(f"{benchmark.name},{query},{duration},{throughput}\n")
         f.close()
 
+def benchmark_to_csv(folder_name):
+    benchmarks_to_low_level_csv(folder_name)
+    benchmarks_to_high_level_csv(folder_name)
+
 if __name__ == "__main__":
-    benchmarks_to_low_level_csv(sys.argv[1])
-    benchmarks_to_high_level_csv(sys.argv[1])
+    benchmark_to_csv(sys.argv[1])
 
