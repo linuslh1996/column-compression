@@ -46,4 +46,4 @@ run_benchmark benchmark/compactVectorFixed bitpacking_compactvector_f
 run_benchmark benchmark/compactVetor simdbp
 
 # Process Result
-zip columncompression$(date +%Y%m%d) *.json
+zip -m columncompression$(date +%Y%m%d) *.json

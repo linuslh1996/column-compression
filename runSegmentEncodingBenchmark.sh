@@ -46,5 +46,5 @@ run_benchmark benchmark/turboPFOR LZ4
 run_benchmark benchmark/turboPFOR RunLength
 
 # Process Results
-zip segmentencoding$(date +%Y%m%d) *.json
+zip -m segmentencoding$(date +%Y%m%d) *.json
 
