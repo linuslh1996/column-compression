@@ -12,7 +12,7 @@ run_benchmark() {
           ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_14_shuffled.json -s 10 -t 1800 --scheduler --clients 14 --mode=Shuffled
           ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_28_shuffled.json -s 10 -t 1800 --scheduler --clients 28 --mode=Shuffled
       else
-          ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_singlethreaded.json -t 1800
+          ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_singlethreaded.json
         fi
     fi
     cd ..
@@ -21,6 +21,14 @@ run_benchmark() {
 # Configuration
 clang_version=11
 run_multithreaded=true
+
+if [ "$1" == "-single" ]; then
+    run_multithreaded=false
+fi
+
+if [ "$1" == "-multi" ]; then
+    run_multithreaded=true
+fi
 
 # Clone Hyrise Repo
 rm -rf hyriseColumnCompressionBenchmark
