@@ -1,0 +1,13 @@
+./runSegmentEncodingBenchmark.sh
+mv hyriseColumnCompressionBenchmark hyriseColumnCompressionBenchmark1
+./runSegmentEncodingBenchmarkMultithreaded.sh
+mv hyriseColumnCompressionBenchmark hyriseColumnCompressionBenchmark2
+
+./runColumnCompressionBenchmark.sh
+mv hyriseColumnCompressionBenchmark hyriseColumnCompressionBenchmark3
+./runColumnCompressionBenchmarkMultithreaded.sh
+mv hyriseColumnCompressionBenchmark hyriseColumnCompressionBenchmark4
+
+exit 0
+cd ~/hyrise_benrobby_0/cmake-build-release
+ninja hyriseBenchmarkColumnCompression && ./hyriseBenchmarkColumnCompression --benchmark_filter="" --benchmark_format=console --benchmark_out=benchmark_results.txt --benchmark_out_format=csv
