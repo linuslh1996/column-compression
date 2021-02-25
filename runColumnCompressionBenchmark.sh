@@ -49,4 +49,5 @@ run_benchmark benchmark/compactVetor simdbp
 run_benchmark benchmarking/compressionUnencoded compressionUnencoded
 
 # Process Result
-zip -m columncompression$(date +%Y%m%d) tpch* sizes*
+zip -m ../columncompression$(date +%Y%m%d) tpch* sizes*
+cd ..
