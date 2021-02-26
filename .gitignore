@@ -4,3 +4,7 @@ venv/
 __pycache__
 data/workloads
 *.csv
+*.svg
+*.json
+*.zip
+*.txt

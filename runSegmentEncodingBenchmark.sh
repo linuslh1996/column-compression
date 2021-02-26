@@ -1,35 +1,54 @@
+#!/bin/bash
+
 run_benchmark() {
     # Checkout Git
     git checkout $1 && git pull && git submodule init && git submodule update
     # Run Benchmark without LTO
-    if [ -n "$3" ]; then    
-         eval $3 && echo "setup"
+    if [ -n "$3" ]; then
+       eval $3
     fi
     mkdir -p cmake-build-release && cd cmake-build-release
     rm -rf *
-    cmake .. -DCMAKE_C_COMPILER=clang-10 -DCMAKE_CXX_COMPILER=clang++-10 -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja hyriseBenchmarkTPCH &&
-    ./hyriseBenchmarkTPCH -s 10 -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_1.json -r 100  >> ../sizes_$2.txt
-    # Run Benchmark with LTO 
-    cmake ..  -DCMAKE_C_COMPILER=clang-10 -DCMAKE_CXX_COMPILER=clang++-10 -DENABLE_LTO=On -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja hyriseBenchmarkTPCH &&
-    ./hyriseBenchmarkTPCH -s 10 -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_LTO_1.json -r 100
+    if cmake .. -DCMAKE_C_COMPILER=clang-$clang_version -DCMAKE_CXX_COMPILER=clang++-$clang_version -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja hyriseBenchmarkTPCH ; then
+      if [ "$run_multithreaded" = true ] ; then
+          ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_14_shuffled.json -s 10 -t 1800 --scheduler --clients 14 --mode=Shuffled
+          ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_28_shuffled.json -s 10 -t 1800 --scheduler --clients 28 --mode=Shuffled
+      else
+          ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_singlethreaded.json -s 10 >> ../sizes_$2.txt
+        fi
+    fi
     cd ..
 }
 
-rm -rf hyriseColumnCompressionBenchmark
-git clone git@github.com:benrobby/hyrise.git hyriseColumnCompressionBenchmark
+# Configuration
+clang_version=11
+run_multithreaded=true
+
+if [ "$1" == "-single" ]; then
+    run_multithreaded=false
+fi
+
+if [ "$1" == "-multi" ]; then
+    run_multithreaded=true
+fi
+
+# Clone Hyrise Repo
+if [ ! -d hyriseColumnCompressionBenchmark ]; then
+    git clone git@github.com:benrobby/hyrise.git hyriseColumnCompressionBenchmark
+fi
 cd hyriseColumnCompressionBenchmark
 
-
-git checkout benchmark/turboPFOR && git pull &&
-git submodule init && git submodule update &&
-cd third_party/TurboPFor-Integer-Compression && make all -j 8 && cd - &&
-
+# Execute Benchmarks
+run_benchmark benchmark/implementSIMDCAI SIMDCAI "cd third_party/SIMDCompressionAndIntersection && make all -j 16 && cd -"
 run_benchmark benchmark/turboPFOR TurboPFOR
 run_benchmark benchmark/turboPFOR_bitpacking TurboPFOR_bitpacking
-
-run_benchmark benchmark/implementSIMDCAI SIMDCAI "cd third_party/SIMDCompressionAndIntersection && make all -j 16 && cd -"
 run_benchmark benchmark/turboPFOR Dictionary
 run_benchmark benchmark/turboPFOR FrameOfReference
 run_benchmark benchmark/turboPFOR Unencoded
 run_benchmark benchmark/turboPFOR LZ4
 run_benchmark benchmark/turboPFOR RunLength
+
+# Process Results
+zip -m ../segmentencoding$(date +%Y%m%d) tpch* sizes*
+cd ..
+
