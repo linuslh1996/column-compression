@@ -14,7 +14,7 @@ run_benchmark() {
           ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_14_shuffled.json -s 10 -t 1800 --scheduler --clients 14 --mode=Shuffled
           ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_28_shuffled.json -s 10 -t 1800 --scheduler --clients 28 --mode=Shuffled
       else
-          ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_singlethreaded.json >> ../sizes_$2.txt
+          ./hyriseBenchmarkTPCH -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_singlethreaded.json -s 10 >> ../sizes_$2.txt
         fi
     fi
     cd ..
