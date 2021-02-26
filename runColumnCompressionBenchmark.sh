@@ -33,8 +33,9 @@ if [ "$1" == "-multi" ]; then
 fi
 
 # Clone Hyrise Repo
-rm -rf hyriseColumnCompressionBenchmark
-git clone git@github.com:benrobby/hyrise.git hyriseColumnCompressionBenchmark
+if [ ! -d hyriseColumnCompressionBenchmark ]; then
+    git clone git@github.com:benrobby/hyrise.git hyriseColumnCompressionBenchmark
+fi
 cd hyriseColumnCompressionBenchmark
 
 # Execute Benchmarks
