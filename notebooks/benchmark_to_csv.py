@@ -53,7 +53,7 @@ def parse_benchmark(filename):
 
     
     mean_throughput = geometric_mean(throughputs)
-    total_duration = np.mean(np.array(mean_durations, dtype=np.float64))
+    total_duration = np.sum(np.array(mean_durations, dtype=np.float64))
     return BenchmarkResults(filename, total_duration, mean_throughput, query_names, mean_durations, throughputs)
 
 def benchmarks_to_low_level_csv(folder_name):
