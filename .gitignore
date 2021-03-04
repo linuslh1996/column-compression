@@ -3,6 +3,10 @@ venv/
 .idea/
 __pycache__
 data/workloads
+data/visualisations
 *.csv
 *.svg
 *.png
+*.json
+*.zip
+*.txt

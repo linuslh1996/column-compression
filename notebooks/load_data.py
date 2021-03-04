@@ -65,5 +65,7 @@ def get_workload_data(workload_directory: Path) -> DataFrame:
 
         # Calculate Information
         grouped_by_column_type: DataFrame = table.groupby([COLUMN_TYPE, DATA_TYPE, OPERATOR_TYPE, WORKLOAD], as_index=False)[RUNTIME_NS].agg(["sum", "count"]).reset_index()
+        grouped_by_column_type = grouped_by_column_type.rename(columns={"sum": "Time (in ns)", DATA_TYPE: "Data Type"})
+
         aggregated_data = aggregated_data.append(grouped_by_column_type)
     return aggregated_data
