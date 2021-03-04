@@ -5,6 +5,8 @@ __pycache__
 data/workloads
 data/visualisations
 *.csv
+*.svg
+*.png
 *.json
 *.zip
 *.txt
