@@ -11,10 +11,10 @@ run_benchmark() {
     rm -rf *
     if cmake .. -DCMAKE_C_COMPILER=clang-$clang_version -DCMAKE_CXX_COMPILER=clang++-$clang_version -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$benchmark_name" ; then
       if [ "$run_multithreaded" = true ] ; then
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../$benchmark_name_$2_14_shuffled.json -s 10 -t 1800 --scheduler --clients $((max_clients / 2)) --mode=Shuffled
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../$benchmark_name_$2_28_shuffled.json -s 10 -t 1800 --scheduler --clients $max_clients --mode=Shuffled
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_14_shuffled.json -s 10 -t 1800 --scheduler --clients $((max_clients / 2)) --mode=Shuffled
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_28_shuffled.json -s 10 -t 1800 --scheduler --clients $max_clients --mode=Shuffled
       else
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../$benchmark_name_$2_singlethreaded.json -s 10  >> ../sizes_$2.txt
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_singlethreaded.json -s 10  >> ../sizes_$2.txt
         fi
     fi
     cd ..
@@ -60,4 +60,3 @@ run_benchmark benchmark/turboPFOR RunLength
 # Process Results
 zip -m ../segmentencoding$(date +%Y%m%d) tpch* sizes*
 cd ..
-
