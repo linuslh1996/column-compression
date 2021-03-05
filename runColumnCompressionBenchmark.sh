@@ -11,10 +11,10 @@ run_benchmark() {
     rm -rf *
     if cmake .. -DCMAKE_C_COMPILER=clang-$clang_version -DCMAKE_CXX_COMPILER=clang++-$clang_version -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$benchmark_name" ; then
       if [ "$run_multithreaded" = true ] ; then
-           ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_14_shuffled.json -s 10 -t 1800 --scheduler --clients 14 --mode=Shuffled
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_28_shuffled.json -s 10 -t 1800 --scheduler --clients 28 --mode=Shuffled
+           ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_14_shuffled.json -s $scale_factor -t $max_time --scheduler --clients $((max_clients / 2)) --mode=Shuffled
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_28_shuffled.json -s $scale_factor -t $max_time --scheduler --clients $max_clients --mode=Shuffled
       else
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_singlethreaded.json -s 10 >> ../sizes_$2.txt
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_singlethreaded.json -s $scale_factor >> ../sizes_$2.txt
         fi
     fi
     cd ..
@@ -23,16 +23,19 @@ run_benchmark() {
 # Configuration
 clang_version=11
 run_multithreaded=true
+max_clients=28
+scale_factor=10
+max_time=1800
 benchmark_name="hyriseBenchmarkTPCH"
 
 
 if [ "$1" == "-single" ]; then
     run_multithreaded=false
 fi
-
 if [ "$1" == "-multi" ]; then
     run_multithreaded=true
 fi
+
 if [ "$2" == "-tpcds" ]; then
    benchmark_name="hyriseBenchmarkTPCDS" 
 fi
