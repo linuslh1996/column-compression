@@ -11,17 +11,17 @@ run_benchmark() {
     rm -rf *
     if cmake .. -DCMAKE_C_COMPILER=clang-$clang_version -DCMAKE_CXX_COMPILER=clang++-$clang_version -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$benchmark_name" ; then
       if [ "$run_multithreaded" = true ] ; then
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_14_shuffled.json -s 10 -t 1800 --scheduler --clients $((max_clients / 2)) --mode=Shuffled
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_28_shuffled.json -s 10 -t 1800 --scheduler --clients $max_clients --mode=Shuffled
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../$benchmark_name_$2_14_shuffled.json -s 10 -t 1800 --scheduler --clients $((max_clients / 2)) --mode=Shuffled
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../$benchmark_name_$2_28_shuffled.json -s 10 -t 1800 --scheduler --clients $max_clients --mode=Shuffled
       else
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_singlethreaded.json -s 10  >> ../sizes_$2.txt
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../$benchmark_name_$2_singlethreaded.json -s 10  >> ../sizes_$2.txt
         fi
     fi
     cd ..
 }
 
 # Configuration
-clang_version=11
+clang_version=10
 run_multithreaded=true
 max_clients=28
 benchmark_name="hyriseBenchmarkTPCH"
@@ -35,7 +35,7 @@ if [ "$1" == "-multi" ]; then
 fi
 
 if [ "$2" == "-tpcds" ]; then
-   benchmark_name="hyriseBenchmarkTPCDS" 
+   benchmark_name="hyriseBenchmarkTPCDS"
 fi
 
 
@@ -44,9 +44,10 @@ fi
 if [ ! -d hyriseColumnCompressionBenchmark ]; then
     git clone git@github.com:benrobby/hyrise.git hyriseColumnCompressionBenchmark
 fi
-cd hyriseColumnCompressionBenchmark
+cd hyriseColumnCompressionBenchmark && git pull
 
 # Execute Benchmarks
+run_benchmark benchmark/compactVectorSegment CompactVector
 run_benchmark benchmark/implementSIMDCAI SIMDCAI "cd third_party/SIMDCompressionAndIntersection && make all -j 16 && cd -"
 run_benchmark benchmark/turboPFOR TurboPFOR
 run_benchmark benchmark/turboPFOR_bitpacking TurboPFOR_bitpacking
