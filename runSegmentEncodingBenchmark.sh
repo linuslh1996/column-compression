@@ -58,5 +58,5 @@ run_benchmark benchmark/turboPFOR LZ4
 run_benchmark benchmark/turboPFOR RunLength
 
 # Process Results
-zip -m ../segmentencoding$(date +%Y%m%d) tpch* sizes*
+zip -m ../$(hostname)_segmentencoding$(date +%Y%m%d) tpch* sizes*
 cd ..
