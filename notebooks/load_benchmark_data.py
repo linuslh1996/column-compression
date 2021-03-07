@@ -38,7 +38,7 @@ def fancy_name(benchmark_name: str) -> str:
     return removed_numbers
 
 def filter_unneccessary_benchmarks(data: DataFrame) -> DataFrame:
-    filtered: DataFrame = data[~data[RUN_NAME].str.match(".*(LZ4|RunLength).*")]
+    filtered: DataFrame = data[~data[RUN_NAME].str.match(".*(LZ4|RunLength|fastpfor).*")]
     return filtered
 
 def get_clients(run_name: str) -> int:
@@ -67,13 +67,23 @@ def complete_with_sizes(data: DataFrame, sizes_folder: Path) -> DataFrame:
     completed_with_size = data.merge(all_sizes, on=LIBRARY_NAME, how="left")
     return completed_with_size
 
-def get_relative_to_baseline(data: DataFrame) -> DataFrame:
-    dictionary_results: DataFrame = data[data[LIBRARY_NAME] == "Dictionary"]
+def get_relative_to_baseline_high_level(data: DataFrame, baseline="Dictionary") -> DataFrame:
+    dictionary_results: DataFrame = data[data[LIBRARY_NAME] == baseline]
     with_baseline: DataFrame = data.copy()
     with_baseline[RUNTIME_TO_BASELINE] = [runtime / dictionary_results[TOTAL_RUNTIME][0]
                                              for runtime in with_baseline[TOTAL_RUNTIME]]
     with_baseline[SIZE_TO_BASELINE] = [int_size / dictionary_results[INT][0]
                                              for int_size in with_baseline[INT]]
+    return with_baseline
+
+def get_relative_to_baseline_low_level(data: DataFrame, baseline="Dictionary") -> DataFrame:
+    baseline_results: DataFrame = data[data[LIBRARY_NAME] == baseline]
+    columns_to_merge: List[str] = [QUERY_NAME, LIBRARY_NAME, AVG_DURATION]
+    with_baseline: DataFrame = data.merge(baseline_results[columns_to_merge], on=[QUERY_NAME],
+                                          suffixes=("", "_baseline"))
+    with_baseline[RUNTIME_TO_BASELINE] = [runtime / baseline
+                                          for runtime,baseline
+                                          in zip (with_baseline[AVG_DURATION], with_baseline[f"{AVG_DURATION}_baseline"])]
     return with_baseline
 
 def rename(data: DataFrame) -> DataFrame:
@@ -89,7 +99,7 @@ def get_high_level(data_folder: Path, sizes_folder: Path) -> DataFrame:
     high_level = complete_info(high_level)
     high_level = complete_with_sizes(high_level, sizes_folder)
     high_level[TOTAL_RUNTIME] = [runtime / 1e9 for runtime in high_level[TOTAL_RUNTIME]]
-    high_level = get_relative_to_baseline(high_level)
+    high_level = get_relative_to_baseline_high_level(high_level)
     return high_level
 
 def get_low_level(data_folder: Path) -> DataFrame:
@@ -99,6 +109,7 @@ def get_low_level(data_folder: Path) -> DataFrame:
     low_level = filter_unneccessary_benchmarks(low_level)
     low_level = complete_info(low_level)
     low_level[AVG_DURATION] = [duration / 1e6 for duration in low_level[AVG_DURATION]]
+    low_level = get_relative_to_baseline_low_level(low_level)
     return low_level
 
 def load_sizes(sizes_file: Path) -> DataFrame:
