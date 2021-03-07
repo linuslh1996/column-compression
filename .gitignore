@@ -10,3 +10,4 @@ data/visualisations
 *.json
 *.zip
 *.txt
+compare_benchmarks.py
