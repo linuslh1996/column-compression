@@ -32,9 +32,9 @@ def fancy_name(benchmark_name: str) -> str:
     fancy_name: str = benchmark_name.split(".")[-2]\
         .replace("_shuffled", "")\
         .replace("_LTO", "")\
-        .replace("tpch_", "")\
         .split("/")[-1]
-    removed_numbers = fancy_name[:fancy_name.rindex("_")]
+    removed_name = fancy_name[fancy_name.index("_")+1:]
+    removed_numbers = removed_name[:removed_name.rindex("_")]
     return removed_numbers
 
 def filter_unneccessary_benchmarks(data: DataFrame) -> DataFrame:
@@ -68,15 +68,18 @@ def complete_with_sizes(data: DataFrame, sizes_folder: Path) -> DataFrame:
     return completed_with_size
 
 def get_relative_to_baseline_high_level(data: DataFrame, baseline="Dictionary") -> DataFrame:
+    dropped_previous_baseline: DataFrame = data.drop(columns=[f"{TOTAL_RUNTIME}_baseline", f"{LIBRARY_NAME}_baseline",f"{INT}_baseline" ],axis=1, errors='ignore')
+    data = dropped_previous_baseline
     baseline_results: DataFrame = data[data[LIBRARY_NAME] == baseline]
-    columns_to_merge: List[str] = [LIBRARY_NAME, TOTAL_RUNTIME, CLIENTS]
+    columns_to_merge: List[str] = [LIBRARY_NAME, TOTAL_RUNTIME, INT, CLIENTS]
     with_baseline: DataFrame = data.merge(baseline_results[columns_to_merge], on=[CLIENTS],
                                           suffixes=("", "_baseline"))
     with_baseline[RUNTIME_TO_BASELINE] = [runtime / baseline
                                           for runtime,baseline
                                           in zip (with_baseline[TOTAL_RUNTIME], with_baseline[f"{TOTAL_RUNTIME}_baseline"])]
-    with_baseline[SIZE_TO_BASELINE] = [int_size / baseline_results[INT][0]
-                                             for int_size in with_baseline[INT]]
+    with_baseline[SIZE_TO_BASELINE] = [int_size / baseline
+                                          for int_size, baseline
+                                          in zip (with_baseline[INT], with_baseline[f"{INT}_baseline"])]
     return with_baseline
 
 def get_relative_to_baseline_low_level(data: DataFrame, baseline="Dictionary") -> DataFrame:
