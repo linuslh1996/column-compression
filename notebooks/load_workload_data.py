@@ -12,7 +12,7 @@ class Operator(str, Enum):
     AGGREGATE = "aggregates",
     JOIN = "joins"
 
-RUNTIME_S = "Runtime (in seconds)"
+RUNTIME_S = "Runtime (in s)"
 COLUMN_TYPE = "Data Access"
 QUERY_HASH = "QUERY_HASH"
 OPERATOR_HASH = "OPERATOR_HASH"
