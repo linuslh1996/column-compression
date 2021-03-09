@@ -21,7 +21,7 @@ run_benchmark() {
 }
 
 # Configuration
-clang_version=10
+clang_version=11
 run_multithreaded=true
 max_clients=28
 benchmark_name="hyriseBenchmarkTPCH"
@@ -37,8 +37,6 @@ fi
 if [ "$2" == "-tpcds" ]; then
    benchmark_name="hyriseBenchmarkTPCDS"
 fi
-
-
 
 # Clone Hyrise Repo
 if [ ! -d hyriseColumnCompressionBenchmark ]; then
@@ -58,5 +56,5 @@ run_benchmark benchmark/turboPFOR LZ4
 run_benchmark benchmark/turboPFOR RunLength
 
 # Process Results
-zip -m ../$(hostname)_segmentencoding$(date +%Y%m%d) tpch* sizes*
+zip -m ../$(hostname)_segmentencoding$(date +%Y%m%d) "$benchmark_name"* sizes*
 cd ..

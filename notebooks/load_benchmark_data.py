@@ -8,11 +8,11 @@ from pandas import DataFrame
 # Benchmark Table
 LIBRARY_NAME: str = "Compression Scheme"
 WITH_LTO: str = "with_lto"
-CLIENTS: str = "clients"
+CLIENTS: str = "Clients"
 MULTITHREADED: str = "multithreaded"
 RUN_NAME: str = "benchmark_run_name"
-QUERY_NAME: str = "Query Name"
-RUNTIME_TO_BASELINE: str = "runtime_to_baseline"
+QUERY_NAME: str = "Query"
+RUNTIME_TO_BASELINE: str = "Runtime Library / Runtime Baseline "
 AVG_DURATION: str = "Avg. Runtime (in ms)"
 TOTAL_RUNTIME: str = "Total Runtime (in seconds)"
 REDUCTION: str = "reduction"
@@ -38,7 +38,7 @@ def fancy_name(benchmark_name: str) -> str:
     return removed_numbers
 
 def filter_unneccessary_benchmarks(data: DataFrame) -> DataFrame:
-    filtered: DataFrame = data[~data[RUN_NAME].str.match(".*(LZ4|RunLength).*")]
+    filtered: DataFrame = data[~data[RUN_NAME].str.match(".*(LZ4|RunLength|fastpfor).*")]
     return filtered
 
 def get_clients(run_name: str) -> int:
@@ -67,13 +67,27 @@ def complete_with_sizes(data: DataFrame, sizes_folder: Path) -> DataFrame:
     completed_with_size = data.merge(all_sizes, on=LIBRARY_NAME, how="left")
     return completed_with_size
 
-def get_relative_to_baseline(data: DataFrame) -> DataFrame:
-    dictionary_results: DataFrame = data[data[LIBRARY_NAME] == "Dictionary"]
-    with_baseline: DataFrame = data.copy()
-    with_baseline[RUNTIME_TO_BASELINE] = [runtime / dictionary_results[TOTAL_RUNTIME][0]
-                                             for runtime in with_baseline[TOTAL_RUNTIME]]
-    with_baseline[SIZE_TO_BASELINE] = [int_size / dictionary_results[INT][0]
+def get_relative_to_baseline_high_level(data: DataFrame, baseline="Dictionary") -> DataFrame:
+    baseline_results: DataFrame = data[data[LIBRARY_NAME] == baseline]
+    columns_to_merge: List[str] = [LIBRARY_NAME, TOTAL_RUNTIME, CLIENTS]
+    with_baseline: DataFrame = data.merge(baseline_results[columns_to_merge], on=[CLIENTS],
+                                          suffixes=("", "_baseline"))
+    with_baseline[RUNTIME_TO_BASELINE] = [runtime / baseline
+                                          for runtime,baseline
+                                          in zip (with_baseline[TOTAL_RUNTIME], with_baseline[f"{TOTAL_RUNTIME}_baseline"])]
+    with_baseline[SIZE_TO_BASELINE] = [int_size / baseline_results[INT][0]
                                              for int_size in with_baseline[INT]]
+    return with_baseline
+
+def get_relative_to_baseline_low_level(data: DataFrame, baseline="Dictionary") -> DataFrame:
+    baseline_results: DataFrame = data[data[LIBRARY_NAME] == baseline]
+    columns_to_merge: List[str] = [QUERY_NAME, LIBRARY_NAME, AVG_DURATION, CLIENTS]
+    dropped_previous_baseline: DataFrame = data.drop(columns=[f"{AVG_DURATION}_baseline", f"{LIBRARY_NAME}_baseline"],axis=1, errors='ignore')
+    with_baseline: DataFrame = dropped_previous_baseline.merge(baseline_results[columns_to_merge], on=[QUERY_NAME, CLIENTS],
+                                          suffixes=("", "_baseline"))
+    with_baseline[RUNTIME_TO_BASELINE] = [runtime / baseline
+                                          for runtime,baseline
+                                          in zip (with_baseline[AVG_DURATION], with_baseline[f"{AVG_DURATION}_baseline"])]
     return with_baseline
 
 def rename(data: DataFrame) -> DataFrame:
@@ -89,7 +103,7 @@ def get_high_level(data_folder: Path, sizes_folder: Path) -> DataFrame:
     high_level = complete_info(high_level)
     high_level = complete_with_sizes(high_level, sizes_folder)
     high_level[TOTAL_RUNTIME] = [runtime / 1e9 for runtime in high_level[TOTAL_RUNTIME]]
-    high_level = get_relative_to_baseline(high_level)
+    high_level = get_relative_to_baseline_high_level(high_level)
     return high_level
 
 def get_low_level(data_folder: Path) -> DataFrame:
@@ -99,6 +113,7 @@ def get_low_level(data_folder: Path) -> DataFrame:
     low_level = filter_unneccessary_benchmarks(low_level)
     low_level = complete_info(low_level)
     low_level[AVG_DURATION] = [duration / 1e6 for duration in low_level[AVG_DURATION]]
+    low_level = get_relative_to_baseline_low_level(low_level, baseline="Dictionary")
     return low_level
 
 def load_sizes(sizes_file: Path) -> DataFrame:
