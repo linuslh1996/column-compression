@@ -47,7 +47,7 @@ def get_workload_data(workload_directory: Path) -> DataFrame:
     workload_name: str = workload_directory.name
     aggregated_data: DataFrame = DataFrame()
     for operator in list(Operator):
-        print(f"Processing {operator}")
+        # print(f"Processing {operator}")
 
         # Get Dataframe
         table: DataFrame = pd.read_csv(workload_directory / f"{operator}.csv", delimiter="|")
