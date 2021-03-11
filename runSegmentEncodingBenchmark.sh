@@ -11,10 +11,9 @@ run_benchmark() {
     rm -rf *
     if cmake .. -DCMAKE_C_COMPILER=clang-$clang_version -DCMAKE_CXX_COMPILER=clang++-$clang_version -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$benchmark_name" ; then
       if [ "$run_multithreaded" = true ] ; then
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_14_shuffled.json -s 10 -t 1800 --scheduler --clients $((max_clients / 2)) --mode=Shuffled
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_28_shuffled.json -s 10 -t 1800 --scheduler --clients $max_clients --mode=Shuffled
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_28_sf"$scale_factor"_shuffled.json -s "$scale_factor" -t 1200 --scheduler --clients $max_clients --mode=Shuffled
       else
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_singlethreaded.json -s 10  >> ../sizes_$2.txt
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_sf"$scale_factor"_singlethreaded.json -s "$scale_factor"  > ../sizes_$2.txt
         fi
     fi
     cd ..
@@ -25,6 +24,7 @@ clang_version=11
 run_multithreaded=true
 max_clients=28
 benchmark_name="hyriseBenchmarkTPCH"
+scale_factor=10
 
 if [ "$1" == "-single" ]; then
     run_multithreaded=false
@@ -52,8 +52,9 @@ run_benchmark benchmark/turboPFOR_bitpacking TurboPFOR_bitpacking
 run_benchmark benchmark/turboPFOR Dictionary
 run_benchmark benchmark/turboPFOR FrameOfReference
 run_benchmark benchmark/turboPFOR Unencoded
-run_benchmark benchmark/turboPFOR LZ4
+#run_benchmark benchmark/turboPFOR LZ4
 run_benchmark benchmark/turboPFOR RunLength
+
 
 # Process Results
 zip -m ../$(hostname)_"$benchmark_name"_segmentencoding$(date +%Y%m%d) "$benchmark_name"* sizes*
