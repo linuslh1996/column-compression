@@ -9,15 +9,20 @@ run_benchmark() {
     fi
     mkdir -p cmake-build-release && cd cmake-build-release
     rm -rf *
+    
     if cmake .. -DCMAKE_C_COMPILER=clang-$clang_version -DCMAKE_CXX_COMPILER=clang++-$clang_version -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$benchmark_name" ; then
       if [ "$run_multithreaded" = true ] ; then
-           ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_14_shuffled.json -s $scale_factor -t $max_time --scheduler --clients $((max_clients / 2)) --mode=Shuffled
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_28_shuffled.json -s $scale_factor -t $max_time --scheduler --clients $max_clients --mode=Shuffled
+          cd ..
+           ./cmake-build-release/"$benchmark_name" -e ./encoding_$2.json --dont_cache_binary_tables -o ./tpch_$2_14_shuffled.json -t $max_time --scheduler --clients $((max_clients / 2)) --mode=Shuffled
+          ./cmake-build-release/"$benchmark_name" -e ./encoding_$2.json --dont_cache_binary_tables -o ./tpch_$2_28_shuffled.json -t $max_time --scheduler --clients $max_clients --mode=Shuffled
       else
-          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_singlethreaded.json -s $scale_factor >> ../sizes_$2.txt
+          cd ..
+          ./cmake-build-release/"$benchmark_name" -e ./encoding_$2.json --dont_cache_binary_tables -o ./tpch_$2_singlethreaded.json >> ./sizes_$2.txt
         fi
+    else
+         cd ..
     fi
-    cd ..
+    
 }
 
 # Configuration
@@ -39,6 +44,10 @@ fi
 if [ "$2" == "-tpcds" ]; then
    benchmark_name="hyriseBenchmarkTPCDS" 
 fi
+if [ "$2" == "-job" ]; then
+   benchmark_name="hyriseBenchmarkJoinOrder" 
+fi
+
 
 
 # Clone Hyrise Repo
