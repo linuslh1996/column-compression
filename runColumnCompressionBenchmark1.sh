@@ -13,11 +13,11 @@ run_benchmark() {
     if cmake .. -DCMAKE_C_COMPILER=clang-$clang_version -DCMAKE_CXX_COMPILER=clang++-$clang_version -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$benchmark_name" ; then
       if [ "$run_multithreaded" = true ] ; then
           cd ..
-           ./cmake-build-release/"$benchmark_name" -e ./encoding_$2.json --dont_cache_binary_tables -o ./tpch_$2_14_shuffled.json -t $max_time --scheduler --clients $((max_clients / 2)) --mode=Shuffled
-          ./cmake-build-release/"$benchmark_name" -e ./encoding_$2.json --dont_cache_binary_tables -o ./tpch_$2_28_shuffled.json -t $max_time --scheduler --clients $max_clients --mode=Shuffled
+           ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_14_shuffled.json -t $max_time -s $scale_factor --scheduler --clients $((max_clients / 2)) --mode=Shuffled
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_28_shuffled.json -t $max_time -s $scale_factor --scheduler --clients $max_clients --mode=Shuffled
       else
           cd ..
-          ./cmake-build-release/"$benchmark_name" -e ./encoding_$2.json --dont_cache_binary_tables -o ./tpch_$2_singlethreaded.json >> ./sizes_$2.txt
+          ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../tpch_$2_singlethreaded.json >> ./sizes_$2.txt
         fi
     else
          cd ..
