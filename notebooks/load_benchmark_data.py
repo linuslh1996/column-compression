@@ -34,16 +34,17 @@ def fancy_name(benchmark_name: str) -> str:
         .replace("_LTO", "")\
         .split("/")[-1]
     removed_name = fancy_name[fancy_name.index("_")+1:]
-    removed_numbers = removed_name[:removed_name.rindex("_")]
-    return removed_numbers
+    removed_sf = removed_name[:removed_name.rindex("_")]
+    removed_clients = removed_sf[:removed_sf.rindex("_")]
+    return removed_clients
 
 def filter_unneccessary_benchmarks(data: DataFrame) -> DataFrame:
-    filtered: DataFrame = data[~data[RUN_NAME].str.match(".*(LZ4|RunLength|fastpfor).*")]
+    filtered: DataFrame = data[~data[RUN_NAME].str.match(".*(fastpfor|LZ4|RunLength).*")]
     return filtered
 
 def get_clients(run_name: str) -> int:
     if "shuffled" in run_name:
-        clients_number: str = run_name.split(".")[-2].replace("_shuffled", "").split("_")[-1]
+        clients_number: str = run_name.split(".")[-2].replace("_shuffled", "").split("_")[-2]
         return int(clients_number)
     return 1
 
