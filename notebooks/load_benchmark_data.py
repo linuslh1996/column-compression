@@ -6,7 +6,8 @@ import pandas as pd
 from pandas import DataFrame
 
 # Benchmark Table
-LIBRARY_NAME: str = "Compression Scheme"
+LIBRARY_NAME: str = "Library Name"
+PAPER_NAME: str = "Compression Scheme"
 WITH_LTO: str = "with_lto"
 CLIENTS: str = "Clients"
 MULTITHREADED: str = "multithreaded"
@@ -27,16 +28,27 @@ SIZE_IN_BYTES: str = "Size (in Bytes)"
 SIZE_IN_GB: str = "Size (in GB)"
 INT: str = "int"
 
-
-def fancy_name(benchmark_name: str) -> str:
-    fancy_name: str = benchmark_name.split(".")[-2]\
-        .replace("_shuffled", "")\
-        .replace("_LTO", "")\
+def extract_lib_name(benchmark_name: str) -> str:
+    fancy_name: str = benchmark_name.split(".")[-2] \
+        .replace("_shuffled", "") \
+        .replace("_LTO", "") \
         .split("/")[-1]
-    removed_name = fancy_name[fancy_name.index("_")+1:]
+    removed_name = fancy_name[fancy_name.index("_") + 1:]
     removed_sf = removed_name[:removed_name.rindex("_")]
     removed_clients = removed_sf[:removed_sf.rindex("_")]
     return removed_clients
+
+def fancy_name(lib_name: str) -> str:
+    replacement_dict: Dict[str] = {
+        "CompactVector": "bitpacking_compactvector",
+        "Dictionary": "dictionary_Hyrise",
+        "FrameOfReference": "for_Hyrise",
+        "SIMDCAI": "for_SIMDCAI",
+        "TurboPFOR_bitpacking": "bitpacking_turboPFOR",
+        "TurboPFOR": "pfor_turboPFOR",
+        "Unencoded": "unencoded_Hyrise"
+    }
+    return replacement_dict[lib_name]
 
 def filter_unneccessary_benchmarks(data: DataFrame) -> DataFrame:
     filtered: DataFrame = data[~data[RUN_NAME].str.match(".*(fastpfor|LZ4|RunLength).*")]
@@ -50,7 +62,8 @@ def get_clients(run_name: str) -> int:
 
 def complete_info(data: DataFrame) -> DataFrame:
     new_data: DataFrame = data.copy()
-    new_data[LIBRARY_NAME] = [fancy_name(b) for b in new_data[RUN_NAME]]
+    new_data[LIBRARY_NAME] = [extract_lib_name(b) for b in new_data[RUN_NAME]]
+    new_data[PAPER_NAME] = [fancy_name(lib_name) for lib_name in new_data[LIBRARY_NAME]]
     new_data[WITH_LTO] = ["LTO" in benchmark_run_name for benchmark_run_name in new_data[RUN_NAME]]
     new_data[CLIENTS] = [get_clients(run_name)
                            for run_name in new_data[RUN_NAME]]
