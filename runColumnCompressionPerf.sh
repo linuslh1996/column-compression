@@ -24,10 +24,10 @@ run_benchmark() {
 
 # Configuration
 clang_version=11
-max_clients=16
-scale_factor=3
-max_time=900
-benchmark_name="hyriseBenchmarkTPCH"
+max_clients=28
+scale_factor=10
+max_time=1800
+benchmark_name="hyriseBenchmarkTPCDS"
 to_measure=l2_rqsts.all_demand_data_rd,l2_rqsts.demand_data_rd_hit,l2_rqsts.demand_data_rd_miss,LLC-loads,LLC-load-misses,LLC-stores,LLC-store-misses,LLC-prefetch-misses
 out_dir=$2
 
@@ -62,5 +62,5 @@ run_benchmark benchmark/compactVectorFixed bitpacking_compactvector_f
 run_benchmark benchmarking/compressionUnencoded compressionUnencoded
 
 # Process Result
-zip -m ../columncompression$(date +%Y%m%d) tpch* sizes*
+zip -m ../columncompressionPerf$(date +%Y%m%d) tpch* sizes* "$out_dir/*"
 cd ..
