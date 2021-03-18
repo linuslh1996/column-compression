@@ -13,8 +13,8 @@ run_benchmark() {
     rm -rf *
     
     if cmake .. -DCMAKE_C_COMPILER=clang-$clang_version -DCMAKE_CXX_COMPILER=clang++-$clang_version -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$benchmark_name" ; then
-        perf stat -e "$to_measure" -o ../"$out_dir"/"$2"_baseline_sf"$scale_factor"_multi.txt ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -r 1 -s $scale_factor --scheduler --clients $max_clients --mode=Shuffled >> ../"$out_dir"/sizes_$2_multi.txt
-        perf stat -e "$to_measure" -o ../"$out_dir"/"$2"_cache_sf"$scale_factor"_multi.txt ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../$out_dir/tpch_$2_28_shuffled.json -t $max_time -s $scale_factor --scheduler --clients $max_clients --mode=Shuffled >> ../"$out_dir"/sizes_$2_cache_multi.txt
+        perf stat -e "$to_measure" -o ../"$out_dir"/"$2"_baseline_sf"$scale_factor"_multi.txt ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -r 1 -s $scale_factor --scheduler --clients $max_clients --mode=Shuffled >> ../"$out_dir"/sizes_$2_sf"$scale_factor"_multi.txt
+        perf stat -e "$to_measure" -o ../"$out_dir"/"$2"_cache_sf"$scale_factor"_multi.txt ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../$out_dir/tpch_$2_28_shuffled.json -t $max_time -s $scale_factor --scheduler --clients $max_clients --mode=Shuffled >> ../"$out_dir"/sizes_$2_sf"$scale_factor"_cache_multi.txt
     fi
     cd ..
 }
