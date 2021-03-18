@@ -10,6 +10,7 @@ LIBRARY_NAME: str = "Library Name"
 PAPER_NAME: str = "Compression Scheme"
 WITH_LTO: str = "with_lto"
 CLIENTS: str = "Clients"
+SCALE_FACTOR: str = "Scale Factor"
 MULTITHREADED: str = "multithreaded"
 RUN_NAME: str = "benchmark_run_name"
 QUERY_NAME: str = "Query"
@@ -43,7 +44,7 @@ def fancy_name(lib_name: str) -> str:
         "CompactVector": "bitpacking_compactvector",
         "Dictionary": "dictionary_Hyrise",
         "FrameOfReference": "for_Hyrise",
-        "SIMDCAI": "for_SIMDCAI",
+        "SIMDCAI": "for_SIMDCAI_simd",
         "TurboPFOR_bitpacking": "bitpacking_turboPFOR",
         "TurboPFOR": "pfor_turboPFOR",
         "Unencoded": "unencoded_Hyrise"
@@ -67,6 +68,7 @@ def complete_info(data: DataFrame) -> DataFrame:
     new_data[WITH_LTO] = ["LTO" in benchmark_run_name for benchmark_run_name in new_data[RUN_NAME]]
     new_data[CLIENTS] = [get_clients(run_name)
                            for run_name in new_data[RUN_NAME]]
+    new_data[SCALE_FACTOR] = [int(name.split("_")[-2].replace("sf","")) for name in new_data[RUN_NAME]]
     new_data[MULTITHREADED] = ["shuffled" in benchmark_run_name for benchmark_run_name in new_data[RUN_NAME]]
     return new_data
 
