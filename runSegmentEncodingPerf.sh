@@ -29,7 +29,7 @@ scale_factor=10
 max_time=1800
 benchmark_name="hyriseBenchmarkTPCH"
 to_measure=l2_rqsts.all_demand_data_rd,l2_rqsts.demand_data_rd_hit,l2_rqsts.demand_data_rd_miss,LLC-loads,LLC-load-misses,LLC-stores,LLC-store-misses,LLC-prefetch-misses
-out_dir=$2
+out_dir="cache_results"
 
 
 if [ "$1" == "-tpch" ]; then
