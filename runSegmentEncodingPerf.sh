@@ -62,5 +62,5 @@ run_benchmark benchmark/turboPFOR LZ4
 run_benchmark benchmark/turboPFOR RunLength
 
 # Process Result
-zip -m ../segmentEncoding$(date +%Y%m%d) tpch* sizes* "$out_dir/*"
+zip -m ../segmentEncoding$(date +%Y%m%d) tpch* sizes* "$out_dir"/*"
 cd ..
