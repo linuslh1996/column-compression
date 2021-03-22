@@ -47,7 +47,9 @@ def fancy_name(lib_name: str) -> str:
         "SIMDCAI": "for_SIMDCAI_simd",
         "TurboPFOR_bitpacking": "bitpacking_turboPFOR",
         "TurboPFOR": "pfor_turboPFOR",
-        "Unencoded": "unencoded_Hyrise"
+        "Unencoded": "unencoded_Hyrise",
+        "LZ4": "LZ4",
+        "RunLength" : "RunLength"
     }
     return replacement_dict[lib_name]
 
