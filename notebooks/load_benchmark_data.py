@@ -49,7 +49,14 @@ def fancy_name(lib_name: str) -> str:
         "TurboPFOR": "pfor_turboPFOR",
         "Unencoded": "unencoded_Hyrise",
         "LZ4": "LZ4",
-        "RunLength" : "RunLength"
+        "RunLength" : "RunLength",
+        "bitpacking_compactvector" : "bitpacking_compactvector",
+        "bitpacking_compactvector_f": "bitpacking_compactvector_16",
+        "bitpacking_simdcai" : "for_SIMDCAI_simd",
+        "bitpacking_turbopfor" : "bitpacking_turboPFOR",
+        "compressionUnencoded" : "unencoded_Hyrise",
+        "dictionary": "bytepacking_Hyrise_fsba",
+        "simdbp": "simdbp128_Hyrise"
     }
     return replacement_dict[lib_name]
 
@@ -116,7 +123,7 @@ def rename(data: DataFrame) -> DataFrame:
                                               "query_name": QUERY_NAME, "avg_duration": AVG_DURATION})
     return renamed
 
-def get_high_level(data_folder: Path, sizes_folder: Path) -> DataFrame:
+def get_high_level(data_folder: Path, sizes_folder: Path, baseline: str="Dictionary") -> DataFrame:
     high_level: DataFrame = pd.read_csv(f"{data_folder}/benchmarks_parsed_high_level.csv")
     high_level = rename(high_level)
     high_level = high_level.sort_values(RUN_NAME)
@@ -124,7 +131,7 @@ def get_high_level(data_folder: Path, sizes_folder: Path) -> DataFrame:
     high_level = complete_info(high_level)
     high_level = complete_with_sizes(high_level, sizes_folder)
     high_level[TOTAL_RUNTIME] = [runtime / 1e9 for runtime in high_level[TOTAL_RUNTIME]]
-    high_level = get_relative_to_baseline_high_level(high_level)
+    high_level = get_relative_to_baseline_high_level(high_level, baseline)
     return high_level
 
 def get_low_level(data_folder: Path) -> DataFrame:
