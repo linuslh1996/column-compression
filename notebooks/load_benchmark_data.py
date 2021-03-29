@@ -61,7 +61,7 @@ def fancy_name(lib_name: str) -> str:
     return replacement_dict[lib_name]
 
 def filter_unneccessary_benchmarks(data: DataFrame) -> DataFrame:
-    filtered: DataFrame = data[~data[RUN_NAME].str.match(".*(fastpfor|LZ4|RunLength).*")]
+    filtered: DataFrame = data[~data[RUN_NAME].str.match(".*(fastpfor|LZ4|RunLength|simdbp).*")]
     return filtered
 
 def get_clients(run_name: str) -> int:
