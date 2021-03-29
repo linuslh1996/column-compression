@@ -28,9 +28,9 @@ run_benchmark() {
 # Configuration
 clang_version=11
 run_multithreaded=true
-max_clients=28
-scale_factor=10
-max_time=1800
+max_clients=4
+scale_factor=1
+max_time=180
 benchmark_name="hyriseBenchmarkTPCH"
 
 
@@ -57,15 +57,8 @@ fi
 cd hyriseColumnCompressionBenchmark
 
 # Execute Benchmarks
-run_benchmark benchmarking/bitCompressionSIMDCAISeq bitpacking_simdcai_seq "cd third_party/SIMDCompressionAndIntersection && make all -j     16 && cd -"
-run_benchmark benchmarking/bitCompressionSIMDCAI bitpacking_simdcai "cd third_party/SIMDCompressionAndIntersection && make all -j     16 && cd -"
-run_benchmark benchmarking/bitCompression dictionary "cd third_party/TurboPFor-Integer-Compression && make all -j 8 && cd -"
-run_benchmark benchmarking/bitCompression bitpacking_turbopfor
-run_benchmark benchmarking/bitCompressionSequential bitpacking_turbopfor_seq
 run_benchmark benchmark/compactVetor bitpacking_compactvector
 run_benchmark benchmark/compactVectorFixed bitpacking_compactvector_f
-run_benchmark benchmark/compactVetor simdbp
-run_benchmark benchmarking/compressionUnencoded compressionUnencoded
 
 # Process Result
 zip -m ../columncompression$(date +%Y%m%d) tpch* sizes*

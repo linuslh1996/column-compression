@@ -37,21 +37,24 @@ if [ "$1" == "-job" ]; then
 fi
 
 
+if [ ! -d column-compression ]; then
+   sudo apt update && sudo apt install git ninja-build build-essential clang zip cmake
+   git clone git@github.com:opcm/pcm.git
+   git clone git@github.com:linuslh1996/column-compression.git && cd column-compression
+fi
+
 # Clone Hyrise Repo
 if [ ! -d hyriseColumnCompressionBenchmark ]; then
-   ssh-keygen
-   sudo apt update && sudo apt install git ninja-build build-essential clang zip cmake
     git clone git@github.com:benrobby/hyrise.git hyriseColumnCompressionBenchmark
     cd hyriseColumnCompressionBenchmark
     ./install_dependencies.sh
-
 else
 	cd hyriseColumnCompressionBenchmark
 fi
 
 # Execute Benchmarks
-run_benchmark benchmarking/bitCompressionSIMDCAI bitpacking_simdcai "cd third_party/SIMDCompressionAndIntersection && make all -j 16 && cd -"
-run_benchmark benchmarking/compressionUnencoded compressionUnencoded
+run_benchmark benchmark/compactVetor bitpacking_compactvector "cd third_party/TurboPFor-Integer-Compression && make all -j 8 && cd -"
+run_benchmark benchmark/compactVectorFixed bitpacking_compactvector_f
 
 # Process Result
 zip -m ../columncompression$(date +%Y%m%d) tpch* sizes*
