@@ -12,3 +12,7 @@ data/visualisations
 *.zip
 *.txt
 compare_benchmarks.py
+
+.DS_Store
+
+notebooks/.ipynb_checkpoints
