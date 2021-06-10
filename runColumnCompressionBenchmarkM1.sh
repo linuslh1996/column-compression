@@ -11,7 +11,6 @@ run_benchmark() {
     if cmake .. -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm@11/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm@11/bin/clang++ -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$3" ; then
       if [ "$run_multithreaded" = true ] ; then
           cd ..
-           #./cmake-build-release/"$benchmark_name" -e ./encoding_$2.json --dont_cache_binary_tables -o ./tpch_$2_14_shuffled.json -t $max_time --scheduler --clients $((max_clients / 2)) --mode=Shuffled
           ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_"$max_clients"_shuffled.json -t $max_time --scheduler --clients $max_clients --mode=Shuffled
       else
           cd ..
@@ -56,23 +55,23 @@ cd hyriseColumnCompressionBenchmark
 
 # Execute Benchmarks
 
-#run_benchmark benchmark/compactVetor bitpacking_compactvector "hyriseBenchmarkTPCH"
+run_benchmark benchmark/compactVetor bitpacking_compactvector "hyriseBenchmarkTPCH"
 run_benchmark benchmark/compactVetor bitpacking_compactvector "hyriseBenchmarkTPCDS"
 run_benchmark benchmark/compactVetor bitpacking_compactvector "hyriseBenchmarkJoinOrder"
 
-#run_benchmark benchmark/compactVetor dictionary "hyriseBenchmarkTPCH"
+run_benchmark benchmark/compactVetor dictionary "hyriseBenchmarkTPCH"
 run_benchmark benchmark/compactVetor dictionary "hyriseBenchmarkTPCDS"
 run_benchmark benchmark/compactVetor dictionary "hyriseBenchmarkJoinOrder"
 
-#run_benchmark benchmark/compactVectorFixed bitpacking_compactvector_f "hyriseBenchmarkTPCH"
+run_benchmark benchmark/compactVectorFixed bitpacking_compactvector_f "hyriseBenchmarkTPCH"
 run_benchmark benchmark/compactVectorFixed bitpacking_compactvector_f "hyriseBenchmarkTPCDS"
 run_benchmark benchmark/compactVectorFixed bitpacking_compactvector_f "hyriseBenchmarkJoinOrder"
 
-#run_benchmark benchmarking/compressionUnencoded compressionUnencoded "hyriseBenchmarkTPCH"
+run_benchmark benchmarking/compressionUnencoded compressionUnencoded "hyriseBenchmarkTPCH"
 run_benchmark benchmarking/compressionUnencoded compressionUnencoded "hyriseBenchmarkTPCDS"
 run_benchmark benchmarking/compressionUnencoded compressionUnencoded "hyriseBenchmarkJoinOrder"
 
 
 # Process Result
-zip ../columncompression$(date +%Y%m%d) tpch* sizes*
+zip ../columncompression$(date +%Y%m%d) hyriseBenchmark* sizes*
 cd ..
