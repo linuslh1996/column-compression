@@ -11,7 +11,12 @@ run_benchmark() {
     if cmake .. -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm@11/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm@11/bin/clang++ -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$3" ; then
       if [ "$run_multithreaded" = true ] ; then
           cd ..
-          ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_"$max_clients"_shuffled.json -t $max_time --scheduler --clients $max_clients --mode=Shuffled
+        if ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_"$max_clients"_shuffled.json -t $max_time -s "$scale_factor"  --scheduler --clients $max_clients --mode=Shuffled; then
+            echo "Success"
+        else
+            # scale factor not supported
+            ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_"$max_clients"_shuffled.json -t $max_time --scheduler --clients $max_clients --mode=Shuffled
+        fi
       else
           cd ..
           ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_singlethreaded.json -s >> ./sizes_$2.txt
