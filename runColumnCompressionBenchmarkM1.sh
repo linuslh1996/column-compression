@@ -8,7 +8,7 @@ run_benchmark() {
     mkdir -p cmake-build-release && cd cmake-build-release
     # rm -rf *
 
-    if cmake .. -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm@11/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm@11/bin/clang++ -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$3" ; then
+    if cmake .. -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm@12/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm@12/bin/clang++ -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$3" ; then
       if [ "$run_multithreaded" = true ] ; then
           cd ..
         if ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_"$max_clients"_shuffled.json -t $max_time -s "$scale_factor"  --scheduler --clients $max_clients --mode=Shuffled; then
@@ -28,7 +28,7 @@ run_benchmark() {
 }
 
 # Configuration
-clang_version="" #"-11"
+clang_version="" #"-12"
 run_multithreaded=true
 max_clients=8
 scale_factor=3
