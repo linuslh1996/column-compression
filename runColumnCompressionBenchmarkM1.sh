@@ -6,20 +6,31 @@ run_benchmark() {
     # Run Benchmark without LTO
 
     mkdir -p cmake-build-release && cd cmake-build-release
-    # rm -rf *
+    rm -rf *
 
     if cmake .. -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm@12/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm@12/bin/clang++ -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$3" ; then
       if [ "$run_multithreaded" = true ] ; then
-          cd ..
-        if ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_"$max_clients"_shuffled.json -t $max_time -s "$scale_factor"  --scheduler --clients $max_clients --mode=Shuffled; then
+        cd ..
+        for i in "2,3" "4,6" "8,12"  # (cores,clients) tuples
+        do
+          IFS=',' read item1 item2 <<< "${i}"
+          cores=$item1
+          max_clients=$item2
+          if ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_"$max_clients"clients_${cores}cores_shuffled.json -t $max_time -s "$scale_factor" --cores $cores --scheduler --clients $max_clients --mode=Shuffled; then
             echo "Success"
-        else
+          else
             # scale factor not supported
-            ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_"$max_clients"_shuffled.json -t $max_time --scheduler --clients $max_clients --mode=Shuffled
-        fi
+            ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_"$max_clients"clients_${cores}cores_shuffled.json -t $max_time --cores $cores --scheduler --clients $max_clients --mode=Shuffled
+          fi
+        done
       else
           cd ..
-          ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_singlethreaded.json -s >> ./sizes_$2.txt
+          if ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_singlethreaded.json -s ${scale_factor} >> ./sizes_$3_$2.txt; then
+            echo "Success"
+          else
+            # scale factor not supported
+            ./cmake-build-release/"$3" -e ./encoding_$2.json --dont_cache_binary_tables -o ./$3_$2_singlethreaded.json >> ./sizes_$3_$2.txt   
+          fi
         fi
     else
          cd ..
@@ -30,9 +41,8 @@ run_benchmark() {
 # Configuration
 clang_version="" #"-12"
 run_multithreaded=true
-max_clients=8
-scale_factor=3
-max_time=1200
+scale_factor=10   # 10 is only ok for single-threaded if swapping during data generation is ok; use 3 for MT experiments
+max_time=1800
 benchmark_name="hyriseBenchmarkTPCH"
 
 
@@ -78,5 +88,5 @@ run_benchmark benchmarking/compressionUnencoded compressionUnencoded "hyriseBenc
 
 
 # Process Result
-zip ../columncompression$(date +%Y%m%d) hyriseBenchmark* sizes*
+zip ../m1_columncompression$(date +%Y%m%d) hyriseBenchmark* sizes*
 cd ..
