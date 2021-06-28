@@ -9,12 +9,13 @@ run_benchmark() {
     fi
     mkdir -p cmake-build-release && cd cmake-build-release
     rm -rf *
-    if cmake .. -DCMAKE_C_COMPILER=clang-$clang_version -DCMAKE_CXX_COMPILER=clang++-$clang_version -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$benchmark_name" ; then
+
+    if cmake .. -DCMAKE_C_COMPILER=$compiler -DCMAKE_CXX_COMPILER=$cppcompiler -DCMAKE_BUILD_TYPE=Release -DHYRISE_RELAXED_BUILD=On -GNinja && ninja "$benchmark_name" ; then
       if [ "$run_multithreaded" = true ] ; then
-        ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_$((max_clients / 2))_sf"$scale_factor"_shuffled.json -s "$scale_factor" -t 1800 --scheduler --clients $((max_clients / 2)) --mode=Shuffled
-        ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_"$max_clients"_sf"$scale_factor"_shuffled.json -s "$scale_factor" -t 1800 --scheduler --clients $max_clients --mode=Shuffled > ../sizes_$2.txt
+        LD_LIBRARY_PATH=/usr/local/lib64/ ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_$((max_clients / 2))_sf"$scale_factor"_shuffled.json -s "$scale_factor" -t 1800 --scheduler --clients $((max_clients / 2)) --mode=Shuffled
+        LD_LIBRARY_PATH=/usr/local/lib64/ ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_"$max_clients"_sf"$scale_factor"_shuffled.json -s "$scale_factor" -t 1800 --scheduler --clients $max_clients --mode=Shuffled > ../sizes_$2.txt
       else
-        ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_sf"$scale_factor"_singlethreaded.json -s "$scale_factor"  > ../sizes_$2.txt
+        LD_LIBRARY_PATH=/usr/local/lib64/ ./"$benchmark_name" -e ../encoding_$2.json --dont_cache_binary_tables -o ../"$benchmark_name"_$2_sf"$scale_factor"_singlethreaded.json -s "$scale_factor"  > ../sizes_$2.txt
       fi
     fi
     cd ..
@@ -22,8 +23,10 @@ run_benchmark() {
 
 # Configuration
 clang_version=11
+compiler="gcc"
+cppcompiler="g++"
 run_multithreaded=true
-max_clients=`lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l`
+max_clients=`lscpu -b -p=CPU | grep -v '^#' | sort -u | wc -l`
 benchmark_name="hyriseBenchmarkTPCH"
 scale_factor=10
 
