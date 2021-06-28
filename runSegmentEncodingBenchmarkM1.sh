@@ -41,7 +41,7 @@ run_benchmark() {
 
 # Configuration
 run_multithreaded=true
-max_time=1800
+max_time=1200
 benchmark_name="hyriseBenchmarkTPCH"
 scale_factor=3  # use 10 for single-threaded comparisons; 3 for anything multi-threaded
 

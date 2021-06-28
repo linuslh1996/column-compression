@@ -42,7 +42,7 @@ run_benchmark() {
 clang_version="" #"-12"
 run_multithreaded=true
 scale_factor=10   # 10 is only ok for single-threaded if swapping during data generation is ok; use 3 for MT experiments
-max_time=1800
+max_time=1200
 benchmark_name="hyriseBenchmarkTPCH"
 
 
@@ -66,7 +66,7 @@ fi
 if [ ! -d hyriseColumnCompressionBenchmark ]; then
     git clone git@github.com:benrobby/hyrise.git hyriseColumnCompressionBenchmark
 fi
-cd hyriseColumnCompressionBenchmark
+cd hyriseColumnCompressionBenchmark && git pull
 
 # Execute Benchmarks
 
@@ -88,5 +88,5 @@ run_benchmark benchmarking/compressionUnencoded compressionUnencoded "hyriseBenc
 
 
 # Process Result
-zip ../m1_columncompression$(date +%Y%m%d) hyriseBenchmark* sizes*
+zip -m ../$(hostname)_"$benchmark_name"_columncompression$(date +%Y%m%d) "$benchmark_name"* sizes*
 cd ..
