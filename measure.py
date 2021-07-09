@@ -17,7 +17,7 @@ max_runtime = 1800 if not DEBUG else 2
 
 cores = -1
 if platform.startswith("linux"):
-    cores = int(subprocess.check_output(["lscpu -b -p=CPU | grep -v '^#' | sort -u | wc -l"], shell=True))
+    cores = int(subprocess.check_output(["lscpu -p | egrep -v '^#' | grep '^[0-9]*,[0-9]*,0,0' | wc -l"], shell=True))
 elif platform.startswith("darwin"):
     cores = int(subprocess.check_output(["sysctl -n hw.ncpu"], shell=True))
 else:
