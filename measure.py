@@ -85,9 +85,9 @@ def run_benchmark(branch_name, encoding_str, benchmark, execution_mode, preparat
     # Ensure we fully saturate the system for MT measurements
     clients = int(max(cores + 1, cores * 1.1))
 
-    cmake = os.system(f"cmake .. -DCMAKE_C_COMPILER={args.compiler_path}{c_compiler} -DCMAKE_CXX_COMPILER={args.compiler_path}{cpp_compiler} -DCMAKE_BUILD_TYPE={build_type} -DHYRISE_RELAXED_BUILD=On -GNinja")
+    cmake = os.system(f"cmake .. -DCMAKE_C_COMPILER={args.compiler_path}{c_compiler} -DCMAKE_CXX_COMPILER={args.compiler_path}{cpp_compiler} -DCMAKE_BUILD_TYPE={build_type} -DHYRISE_RELAXED_BUILD=On")
     assert cmake == 0
-    ninja = os.system(f"ninja {binary}")
+    ninja = os.system(f"make -j {cores} {binary}")
     assert ninja == 0
 
     os.chdir("..")
