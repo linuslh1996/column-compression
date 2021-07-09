@@ -50,14 +50,15 @@ cd hyriseColumnCompressionBenchmark && git pull
 
 # Execute Benchmarks
 run_benchmark benchmark/compactVectorSegmentOldMaster CompactVector
+run_benchmark benchmark/compactVectorSegmentOldMaster CompactVector
+run_benchmark benchmark/compactVectorSegmentOldMaster Dictionary
+run_benchmark benchmark/compactVectorSegmentOldMaster FrameOfReference
+run_benchmark benchmark/compactVectorSegmentOldMaster Unencoded
+run_benchmark benchmark/compactVectorSegmentOldMaster LZ4
+run_benchmark benchmark/compactVectorSegmentOldMaster RunLength
 run_benchmark benchmark/implementSIMDCAI SIMDCAI "cd third_party/SIMDCompressionAndIntersection && make all -j 16 && cd -"
 run_benchmark benchmark/turboPFOR TurboPFOR
 run_benchmark benchmark/turboPFOR_bitpacking TurboPFOR_bitpacking
-run_benchmark benchmark/turboPFOR Dictionary
-run_benchmark benchmark/turboPFOR FrameOfReference
-run_benchmark benchmark/turboPFOR Unencoded
-run_benchmark benchmark/turboPFOR LZ4
-run_benchmark benchmark/turboPFOR RunLength
 
 
 # Process Results
