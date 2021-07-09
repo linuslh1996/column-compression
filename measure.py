@@ -119,7 +119,7 @@ def run_benchmark(branch_name, encoding_str, benchmark, execution_mode, preparat
 def main():
     # Clone Hyrise Repo
     if not Path("hyriseColumnCompressionBenchmark").exists():
-        clone = os.system("git clone git@github.com:benrobby/hyrise.git hyriseColumnCompressionBenchmark")
+        clone = os.system("git clone https://github.com/benrobby/hyrise hyriseColumnCompressionBenchmark")
         assert clone == 0
 
     os.chdir("hyriseColumnCompressionBenchmark")
