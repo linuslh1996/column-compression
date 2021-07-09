@@ -18,7 +18,6 @@ max_runtime = 1800 if not DEBUG else 2
 cores = -1
 if platform.startswith("linux"):
     cores = int(subprocess.check_output(["lscpu -b -p=CPU | grep -v '^#' | sort -u | wc -l"], shell=True))
-    print("linux, using", cores, " cores")
 elif platform.startswith("darwin"):
     cores = int(subprocess.check_output(["sysctl -n hw.ncpu"], shell=True))
 else:
@@ -33,7 +32,7 @@ parser.add_argument('--evaluation', choices=("columncompression", "segmentencodi
 parser.add_argument('--execution_mode', choices=("single-threaded", "multi-threaded", "both"),
                     default="single-threaded", required=True)
 parser.add_argument('--compiler', choices=("GCC", "Clang"), default="Clang", required=True)
-parser.add_argument('--compiler_path', type=str, required=False)
+parser.add_argument('--compiler_path', type=str, default="", required=False)
 parser.add_argument('--scale_factor', type=int, default=10, required=True)
 parser.add_argument('--track_performance_counters', choices=("ON", "OFF"), default="OFF", required=True)
 parser.add_argument('--intel_pcm_path', type=str, required=False)
@@ -50,7 +49,7 @@ if args.amd_uprof_path is not None:
 
 # TODO: same for Intel
 
-if args.compiler_path is not None:
+if args.compiler_path != "":
     assert args.compiler_path[-1] == "/"
 
 
@@ -150,3 +149,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
