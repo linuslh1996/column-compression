@@ -9,7 +9,7 @@ from datetime import date
 from pathlib import Path
 from sys import platform
 
-DEBUG = True
+DEBUG = False
 
 hostname = socket.gethostname()
 today = date.today()
@@ -40,12 +40,22 @@ parser.add_argument('--amd_uprof_path', type=str, required=False)
 parser.add_argument('benchmarks', nargs='+', help="List of benchmarks to execute (TPCH, TPCDS, or JoinOrder).")
 args = parser.parse_args()
 
+
+assert args.track_performance_counters == "OFF" or (args.amd_uprof_path is not None or args.intel_pcm_path is not None), "When requesting performance counter measurements, pass path to PCM tools."
+
+arch = "Unset"
 if args.amd_uprof_path is not None:
-    uprof_path = Path(arg.amd_uprof_path).expanduser().resolve()
+    uprof_path = Path(args.amd_uprof_path).expanduser().resolve()
     assert Path(uprof_path / "AMDuProfPcm").exists(), "Not able to find AMD uProf"
     assert args.intel_pcm_path is None, "Cannot run Intel and AMD instrumentalization at the same time."
     uprof_binary = uprof_path / "AMDuProfPcm"
-    arch = "AMD"
+    arch = "amd"
+elif args.intel_pcm_path is not None:
+    pcm_path = Path(args.intel_pcm_path).expanduser().resolve()
+    assert Path(pcm_path / "pcm.x").exists(), "Not able to find Intel pcm.x"
+    assert args.amd_uprof_path is None, "Cannot run Intel and AMD instrumentalization at the same time."
+    pcm_binary = pcm_path / "pcm.x"
+    arch = "intel"
 
 # TODO: same for Intel
 
@@ -87,21 +97,21 @@ def run_benchmark(branch_name, encoding_str, benchmark, execution_mode, preparat
 
     cmake = os.system(f"cmake .. -DCMAKE_C_COMPILER={args.compiler_path}{c_compiler} -DCMAKE_CXX_COMPILER={args.compiler_path}{cpp_compiler} -DCMAKE_BUILD_TYPE={build_type} -DHYRISE_RELAXED_BUILD=On")
     assert cmake == 0
-    ninja = os.system(f"make -j {cores} {binary}")
+    ninja = os.system(f"make -s -j {cores} {binary} > /dev/null")
     assert ninja == 0
 
     os.chdir("..")
 
-    benchmark_command = f"./{build_folder}/{binary} -e ./encoding_{encoding_str}.json --dont_cache_binary_tables -o ./{binary}_{encoding_str}_{clients}clients_{cores}cores_{execution_mode_short}.json"
+    benchmark_command = f"./{build_folder}/{binary} -e ./encoding_{encoding_str}.json --dont_cache_binary_tables"
     if binary != "hyriseBenchmarkJoinOrder":
         benchmark_command += f" -s {scale_factor} "
     if DEBUG:
         benchmark_command += " -r 5 "
 
     if execution_mode == "multi-threaded":
-        benchmark_command += f" -t {max_runtime} --scheduler --clients {max_clients} --mode=Shuffled"
-        if args.track_performance_counters:
-            if args.amd_pcm_path is not None:
+        benchmark_command += f" -t {max_runtime} --scheduler --clients {clients} --mode=Shuffled -o {binary}_{encoding_str}_{clients}clients_{cores}cores_{execution_mode_short}.json"
+        if args.track_performance_counters == "ON":
+            if args.amd_uprof_path is not None:
                 adm_pcm = os.system(f"sudo ${uprof_binary} -m memory,tlb,l1,l2,l3 -c package=1 -q -A package -o {binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores_pcm.log  -- numactl -m 0 -N 0 " + benchmark_command + f' | ts -s "%s" > {binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores.log')
                 assert adm_pcm == 0
             elif args.intel_pcm_path is not None:
@@ -113,7 +123,7 @@ def run_benchmark(branch_name, encoding_str, benchmark, execution_mode, preparat
             assert mt_exec == 0
         
     else:
-        st_exec = os.system("numactl -m 0 -N 0 " + benchmark_command + f"./sizes_{binary}_{encoding_str}_SF{scale_factor}.txt")
+        st_exec = os.system("numactl -m 0 -N 0 " + benchmark_command + f" -o ./{binary}_{encoding_str}_{execution_mode_short}.json > sizes_{binary}_{encoding_str}_SF{scale_factor}.txt")
 
 
 def main():
@@ -132,19 +142,30 @@ def main():
     for execution_mode in execution_modes:
         execution_mode_short = "ST" if execution_mode == "single-threaded" else "MT"
         for benchmark in args.benchmarks:
-            print(benchmark)
 
-            run_benchmark("benchmark/compactVetor" ,"bitpacking_compactvector", benchmark, execution_mode)
-            run_benchmark("benchmark/compactVectorFixed" ,"bitpacking_compactvector_f", benchmark, execution_mode)
-            run_benchmark("benchmarking/compressionUnencoded" ,"compressionUnencoded", benchmark, execution_mode)
-            run_benchmark("benchmarking/bitCompressionSIMDCAI" ,"bitpacking_simdcai", benchmark, execution_mode,
-                          "cd third_party/SIMDCompressionAndIntersection && make all -j 16 && cd -")
-            run_benchmark("benchmarking/bitCompression" ,"dictionary", benchmark, execution_mode,
-                          "cd third_party/TurboPFor-Integer-Compression && make all -j 8 && cd -")
-            run_benchmark("benchmarking/bitCompression" ,"bitpacking_turbopfor", benchmark, execution_mode)
+            if args.evaluation == "columncompression":
+                run_benchmark("benchmark/compactVetor" ,"bitpacking_compactvector", benchmark, execution_mode)
+                run_benchmark("benchmark/compactVectorFixed" ,"bitpacking_compactvector_f", benchmark, execution_mode)
+                run_benchmark("benchmarking/compressionUnencoded" ,"compressionUnencoded", benchmark, execution_mode)
+                run_benchmark("benchmarking/bitCompressionSIMDCAI" ,"bitpacking_simdcai", benchmark, execution_mode,
+                              "cd third_party/SIMDCompressionAndIntersection && make all -j 16 && cd -")
+                run_benchmark("benchmarking/bitCompression" ,"dictionary", benchmark, execution_mode,
+                              f"cd third_party/TurboPFor-Integer-Compression && make all -j {cores} && cd -")
+                run_benchmark("benchmarking/bitCompression" ,"bitpacking_turbopfor", benchmark, execution_mode)
+            else:
+                run_benchmark("benchmark/compactVectorSegmentOldMaster", "CompactVector", benchmark, execution_mode)
+                run_benchmark("benchmark/compactVectorSegmentOldMaster", "Dictionary", benchmark, execution_mode)
+                run_benchmark("benchmark/compactVectorSegmentOldMaster", "FrameOfReference", benchmark, execution_mode)
+                run_benchmark("benchmark/compactVectorSegmentOldMaster", "Unencoded", benchmark, execution_mode)
+                run_benchmark("benchmark/compactVectorSegmentOldMaster", "LZ4", benchmark, execution_mode)
+                run_benchmark("benchmark/compactVectorSegmentOldMaster", "RunLength", benchmark, execution_mode)
+                run_benchmark("benchmark/implementSIMDCAI", "SIMDCAI", benchmark, execution_mode,
+                              f"cd third_party/SIMDCompressionAndIntersection && make all -j {cores} && cd -")
+                run_benchmark("benchmark/turboPFOR", "TurboPFOR", benchmark, execution_mode)
+                run_benchmark("benchmark/turboPFOR_bitpacking", "TurboPFOR_bitpacking", benchmark, execution_mode)
 
             # Process Result
-            os.system(f"zip -m ../{hostname}_{benchmark}_SF{args.scale_factor}_{args.evaluation}_{execution_mode_short}_{today.strftime('%Y%m%d')} {benchmark}* sizes* *pcm.csv")
+            os.system(f"zip -m ../{hostname}_hyriseBenchmark{benchmark}_SF{args.scale_factor}_{args.evaluation}_{execution_mode_short}_{today.strftime('%Y%m%d')} hyriseBenchmark{benchmark}* sizes* *pcm.csv")
 
 
 if __name__ == "__main__":
