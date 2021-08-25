@@ -95,6 +95,11 @@ def run_benchmark(branch_name, encoding_str, benchmark, execution_mode, preparat
     # Ensure we fully saturate the system for MT measurements
     clients = int(max(cores + 1, cores * 1.1))
 
+    home_dir = Path.home().expanduser().resolve()
+
+    ### For root-less DE Lab measurements
+    #cmake = os.system(f'cmake .. -DCMAKE_C_COMPILER={args.compiler_path}{c_compiler} -DCMAKE_CXX_COMPILER={args.compiler_path}{cpp_compiler} -DCMAKE_BUILD_TYPE={build_type} -DHYRISE_RELAXED_BUILD=On -DBOOST_INCLUDEDIR="{home_dir}/boost/include" -DPostgreSQL_INCLUDE_DIRS="{home_dir}/opt/postgres/include/" -DREADLINE_INCLUDE_DIR="{home_dir}" -DREADLINE_LIBRARY="{home_dir}/readline/readline.o" -DTBB_INCLUDE_DIR="{home_dir}/tbb/include" -DTBB_LIBRARY="{home_dir}/tbb/lib/intel64/gcc4.8/libtbb.so"  -DSQLITE3_INCLUDE_DIR="{home_dir}/opt/sqlite/include" -DSQLITE3_LIBRARY="{home_dir}/opt/sqlite/lib/libsqlite3.so" -DCMAKE_CXX_FLAGS="-I {home_dir}/systemtap-4.5/includes"')
+
     cmake = os.system(f"cmake .. -DCMAKE_C_COMPILER={args.compiler_path}{c_compiler} -DCMAKE_CXX_COMPILER={args.compiler_path}{cpp_compiler} -DCMAKE_BUILD_TYPE={build_type} -DHYRISE_RELAXED_BUILD=On")
     assert cmake == 0
     ninja = os.system(f"make -s -j {cores} {binary} > /dev/null")
@@ -107,15 +112,18 @@ def run_benchmark(branch_name, encoding_str, benchmark, execution_mode, preparat
         benchmark_command += f" -s {scale_factor} "
     if DEBUG:
         benchmark_command += " -r 5 "
+    else:
+        if binary == "hyriseBenchmarkJoinOrder" and execution_mode == "single-threaded":
+            benchmark_command += " -r 50 "
 
     if execution_mode == "multi-threaded":
         benchmark_command += f" -t {max_runtime} --scheduler --clients {clients} --mode=Shuffled -o {binary}_{encoding_str}_{clients}clients_{cores}cores_{execution_mode_short}.json"
         if args.track_performance_counters == "ON":
             if args.amd_uprof_path is not None:
-                adm_pcm = os.system(f"sudo ${uprof_binary} -m memory,tlb,l1,l2,l3 -c package=1 -q -A package -o {binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores_pcm.log  -- numactl -m 0 -N 0 " + benchmark_command + f' | ts -s "%s" > {binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores.log')
+                adm_pcm = os.system(f"{uprof_binary} -m memory,tlb,l1,l2,l3 -c package=1 -q -A package -o {binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores_pcm.log  -- numactl -m 0 -N 0 " + benchmark_command + f' | ts -s "%s" > {binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores.log')
                 assert adm_pcm == 0
             elif args.intel_pcm_path is not None:
-                intel_pcm = os.system(f"sudo ${pcm_binary} 1 -csv={binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores_pcm.log --nosockets --nocores -- numactl -m 0 -N 0 " + benchmark_command + f' | ts -s "%s" > {binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores.log')
+                intel_pcm = os.system(f"sudo {pcm_binary} 1 -csv={binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores_pcm.log --nosockets --nocores -- numactl -m 0 -N 0 " + benchmark_command + f' | ts -s "%s" > {binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores.log')
                 assert intel_pcm == 0
             os.system(f"python3 ../extract_csv_from_pcm_log.py {arch} {binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores.log {binary}_{encoding_str}_SF{scale_factor}_{clients}clients_{cores}cores_pcm.log")
         else:
